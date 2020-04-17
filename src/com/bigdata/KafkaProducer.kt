@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 fun main(args: Array<String>) {
-    KafkaProducer("localhost:9092").produce(2)
+    KafkaProducer("localhost:9092").produce(1)
 }
 
 class KafkaProducer(brokers: String) {
@@ -44,11 +44,12 @@ class KafkaProducer(brokers: String) {
             .map { line ->
                 line.split(',').let {
                     Trip(
-                        it[0].toInt(), it[1], LocalDateTime.parse(it[2], formatter), it[3].toInt(),
+                        it[0].toInt(), it[1].toInt(), LocalDateTime.parse(it[2], formatter), it[3].toInt(),
                         it[4].toDouble(), it[5], it[6], it[7].toInt(), it[8].toDouble(), it[9]
                     )
                 }
             }
+            .filter { it.stationId == 283 }
             .forEach {
                 val trip = jsonMapper.writeValueAsString(it)
                 val futureResult = producer.send(ProducerRecord("input-topic-2", trip))
@@ -70,7 +71,7 @@ class KafkaProducer(brokers: String) {
 
 data class Trip(
     val id: Int,
-    val start_stop: String,
+    val eventType: Int,  //start_stop – czy rozpoczęcie (0) czy zakończenie (1) przejazdu
     val eventTime: LocalDateTime,
     val stationId: Int,
     val duration: Double,
